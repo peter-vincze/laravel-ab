@@ -1,10 +1,10 @@
 <?php
 
-namespace Ben182\AbTesting\Models;
+namespace PeterVincze\AbTesting\Models;
 
-use Ben182\AbTesting\AbTestingFacade;
+use PeterVincze\AbTesting\AbTestingFacade;
 use Illuminate\Database\Eloquent\Model;
-use Ben182\AbTesting\Events\ExperimentNewVisitor;
+use PeterVincze\AbTesting\Events\ExperimentNewVisitor;
 
 class Experiment extends Model
 {
@@ -13,6 +13,9 @@ class Experiment extends Model
     protected $fillable = [
         'name',
         'visitors',
+        'git_repo',
+        'git_checkout',
+        'deploy_script'
     ];
 
     protected $casts = [
@@ -29,7 +32,6 @@ class Experiment extends Model
         if (AbTestingFacade::isCrawler()) {
             return;
         }
-
         $this->increment('visitors');
         event(new ExperimentNewVisitor($this));
     }

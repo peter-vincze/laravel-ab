@@ -1,42 +1,42 @@
 {
-    "name": "ben182/laravel-ab",
-    "description": "Laravel A/B experiment testing tool",
+    "name": "peter-vincze/laravel-ab",
+    "description": "Laravel A/B experiment testing tool normal and revisioned way",
     "keywords": [
-        "ben182",
+        "peter-vincze",
         "php",
         "laravel",
         "laravel-package",
-        "laravel-5-package",
+        "laravel-8-package",
         "ab-testing"
     ],
-    "homepage": "https://github.com/ben182/laravel-ab",
+    "homepage": "https://github.com/peter-vincze/laravel-ab",
     "license": "MIT",
     "type": "library",
     "authors": [
         {
-            "name": "Ben",
-            "email": "moin@benjaminbortels.de",
+            "name": "Peter",
+            "email": "vinczepetertamas@gmail.com",
             "role": "Developer"
         }
     ],
     "require": {
-        "php": "^7.0",
-        "illuminate/support": "5.6.* | 5.7.* | 5.8.* | ^6.0",
+        "php": "^7.4 | ^8.0",
+        "illuminate/support": ">=7.0",
         "jaybizzle/crawler-detect": "^1.2"
     },
     "require-dev": {
-        "orchestra/testbench": "3.6.* | 3.7.* | 3.8.*",
-        "phpunit/phpunit": "^7.0 | ^8.0",
-        "mockery/mockery": "^1.0"
+        "mockery/mockery": "^1.0",
+        "orchestra/testbench": "^6.9",
+        "phpunit/phpunit": "^9.5"
     },
     "autoload": {
         "psr-4": {
-            "Ben182\\AbTesting\\": "src"
+            "PeterVincze\\AbTesting\\": "src"
         }
     },
     "autoload-dev": {
         "psr-4": {
-            "Ben182\\AbTesting\\Tests\\": "tests"
+            "PeterVincze\\AbTesting\\Tests\\": "tests"
         }
     },
     "scripts": {
@@ -49,10 +49,10 @@
     "extra": {
         "laravel": {
             "providers": [
-                "Ben182\\AbTesting\\AbTestingServiceProvider"
+                "PeterVincze\\AbTesting\\AbTestingServiceProvider"
             ],
             "aliases": {
-                "AbTesting": "Ben182\\AbTesting\\AbTestingFacade"
+                "PeterVincze": "PeterVincze\\AbTesting\\AbTestingFacade"
             }
         }
     }

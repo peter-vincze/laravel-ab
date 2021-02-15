@@ -2,31 +2,45 @@
     <img src="https://i.ibb.co/hy7fjMG/Laravel-AB.png" width="300"/>
 </h6>
 
-<p align="center"><a href="https://github.com/ben182/laravel-ab/releases"><img src="https://camo.githubusercontent.com/c3ce61db6a98f1a6d141a4fc3b3f83c182674ba8/68747470733a2f2f696d672e736869656c64732e696f2f6769746875622f72656c656173652f62656e3138322f6c61726176656c2d61622e7376673f7374796c653d666c61742d737175617265" alt="Latest Version" data-canonical-src="https://img.shields.io/github/release/ben182/laravel-ab.svg?style=flat-square" style="max-width:100%;"></a>
-<a href="https://travis-ci.org/ben182/laravel-ab" rel="nofollow"><img src="https://camo.githubusercontent.com/7994c56ad88fb3e839360835571cc670d88af2e2/68747470733a2f2f696d672e736869656c64732e696f2f7472617669732f62656e3138322f6c61726176656c2d61622f6d61737465722e7376673f7374796c653d666c61742d737175617265" alt="Build Status" data-canonical-src="https://img.shields.io/travis/ben182/laravel-ab/master.svg?style=flat-square" style="max-width:100%;"></a>
-<a href="https://scrutinizer-ci.com/g/ben182/laravel-ab" rel="nofollow"><img src="https://camo.githubusercontent.com/88e5e8e14c12f93518fa07a025a15893ae8772e4/68747470733a2f2f696d672e736869656c64732e696f2f7363727574696e697a65722f672f62656e3138322f6c61726176656c2d61622e7376673f7374796c653d666c61742d737175617265" alt="Quality Score" data-canonical-src="https://img.shields.io/scrutinizer/g/ben182/laravel-ab.svg?style=flat-square" style="max-width:100%;"></a>
-<a href="https://scrutinizer-ci.com/g/ben182/laravel-ab/?branch=master" rel="nofollow"><img src="https://camo.githubusercontent.com/de896bb05aa6d6224d2c1e7be81c36b18895128d/68747470733a2f2f7363727574696e697a65722d63692e636f6d2f672f62656e3138322f6c61726176656c2d61622f6261646765732f636f7665726167652e706e673f623d6d6173746572" alt="Code Coverage" data-canonical-src="https://scrutinizer-ci.com/g/ben182/laravel-ab/badges/coverage.png?b=master" style="max-width:100%;"></a></p>
+<p align="center"><a href="https://github.com/peter-vincze/laravel-ab/releases"><img src="https://camo.githubusercontent.com/c3ce61db6a98f1a6d141a4fc3b3f83c182674ba8/68747470733a2f2f696d672e736869656c64732e696f2f6769746875622f72656c656173652f62656e3138322f6c61726176656c2d61622e7376673f7374796c653d666c61742d737175617265" alt="Latest Version" data-canonical-src="https://img.shields.io/github/release/peter-vincze/laravel-ab.svg?style=flat-square" style="max-width:100%;"></a>
+<a href="https://travis-ci.org/peter-vincze/laravel-ab" rel="nofollow"><img src="https://camo.githubusercontent.com/7994c56ad88fb3e839360835571cc670d88af2e2/68747470733a2f2f696d672e736869656c64732e696f2f7472617669732f62656e3138322f6c61726176656c2d61622f6d61737465722e7376673f7374796c653d666c61742d737175617265" alt="Build Status" data-canonical-src="https://img.shields.io/travis/peter-vincze/laravel-ab/master.svg?style=flat-square" style="max-width:100%;"></a>
+</p>
 
 This package helps you to find out which content works on your site and which doesn't.
 
-It allows you to create experiments and goals. The visitor will receive randomly the next experiment and you can customize your site to that experiment. The view and the goal conversion will be tracked and you can view the results in a report.
+It allows you to create experiments and goals. The visitor will receive randomly the next experiment and you can customize your site to that experiment. The view and the goal conversion will be tracked and you can view the results in a report. It can work as a git repo based way, 
+to be able to get separate codes for separate abtest experiments, to be able to easier maintain the code back to the master code in git revisioning when ab test goals are over.
 
 ## Installation
 
-This package can be used in Laravel 5.6 or higher.
+This package can be used in Laravel 8 or higher.
 
 You can install the package via composer:
 
 ```bash
-composer require ben182/laravel-ab
+composer require peter-vincze/laravel-ab
 ```
 
 ## Config
 
-After installation publish the config file:
+After installation publish the config file.use the command above.
 
 ```bash
-php artisan vendor:publish --provider="Ben182\AbTesting\AbTestingServiceProvider"
+php artisan vendor:publish --provider="PeterVincze\AbTesting\AbTestingServiceProvider"
+```
+If you write a config as to checkout branch(es)/commit(s) from repo what config experiment git_repo 
+field specify into abtesting/{experiment->id} directory under base_path() is going to happen, with
+composer install and npm update and npm run development. If you make a "ab-testing-deploy-script"
+directory under base_path() in the branch/commit the process going to search for the config
+of the per experiment based deploy_script field filename in that directory, and going to run it,
+and finally after deleting the .git directory under all abtesting/** directories to remove the 
+revision system by reason of performance.
+If you change config.php you should run this script every time to synchronize
+changes, do not forget if an experiment name is the same as before, by running this command, it 
+will lost its goals and visits. You can autocomplete goals by a regexp pattern of request uri what you can specity also in the config under the goal, the field name is autocompletegoal_route_regexp_pattern, if a goal is not a complicated logic, or if you can organize your logic around a route regexp pattern. This means once an ab stat is ready, and we can make a choice from them, than you can only cherry pick a commit on top of master, without any code cleaning.
+
+```bash
+php artisan ab:config
 ```
 
 You can define your experiments and goals in there.
@@ -183,11 +197,11 @@ Please see [CONTRIBUTING](CONTRIBUTING.md) for details.
 
 ### Security
 
-If you discover any security related issues, please email moin@benjaminbortels.de instead of using the issue tracker.
+If you discover any security related issues, please email vicnzepetertamas@gmail.com instead of using the issue tracker.
 
 ## Credits
 
-- [Benjamin Bortels](https://github.com/ben182)
+- [Peter Vincze](https://github.com/peter-vincze)
 - [All Contributors](../../contributors)
 
 ## License

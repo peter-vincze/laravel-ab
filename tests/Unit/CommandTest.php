@@ -1,11 +1,11 @@
 <?php
 
-namespace Ben182\AbTesting\Tests;
+namespace PeterVincze\AbTesting\Tests;
 
-use Ben182\AbTesting\Models\Goal;
-use Ben182\AbTesting\AbTestingFacade;
-use Ben182\AbTesting\Models\Experiment;
-use Ben182\AbTesting\Commands\ReportCommand;
+use PeterVincze\AbTesting\Models\Goal;
+use PeterVincze\AbTesting\AbTestingFacade;
+use PeterVincze\AbTesting\Models\Experiment;
+use PeterVincze\AbTesting\Commands\ReportCommand;
 
 class CommandTest extends TestCase
 {
@@ -58,6 +58,7 @@ class CommandTest extends TestCase
                 '0 (0%)',
             ],
         ];
+
         $this->assertEquals($expected, $reportCommand->prepareBody()->toArray());
 
         $this->newVisitor();
@@ -116,4 +117,17 @@ class CommandTest extends TestCase
         ];
         $this->assertEquals($expected, $reportCommand->prepareBody()->toArray());
     }
+    public function test_config_command()
+    {
+        try {
+            $this->startGitCheckout();
+            $this->artisan('ab:config');
+            $this->stop();
+            $this->assertEquals(1,1);
+        }
+        catch(Exception $exception) {
+            $this->assertEquals(1,0);
+        }
+    }
+
 }

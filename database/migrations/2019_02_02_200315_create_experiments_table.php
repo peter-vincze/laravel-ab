@@ -16,6 +16,9 @@ class CreateExperimentsTable extends Migration
         Schema::create('ab_experiments', function (Blueprint $table) {
             $table->increments('id');
             $table->string('name')->unique();
+            $table->string('git_checkout');
+            $table->string('git_repo');
+            $table->string('deploy_script');
             $table->integer('visitors');
             $table->timestamps();
         });

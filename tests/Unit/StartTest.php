@@ -1,11 +1,11 @@
 <?php
 
-namespace Ben182\AbTesting\Tests;
+namespace PeterVincze\AbTesting\Tests;
 
-use Ben182\AbTesting\Models\Goal;
-use Ben182\AbTesting\AbTestingFacade;
-use Ben182\AbTesting\Models\Experiment;
-use Ben182\AbTesting\Exceptions\InvalidConfiguration;
+use PeterVincze\AbTesting\Models\Goal;
+use PeterVincze\AbTesting\AbTestingFacade;
+use PeterVincze\AbTesting\Models\Experiment;
+use PeterVincze\AbTesting\Exceptions\InvalidConfiguration;
 
 class StartTest extends TestCase
 {
@@ -25,34 +25,6 @@ class StartTest extends TestCase
             return $goal->hit === 0;
         });
         $this->assertTrue($everyGoalsHitIs0);
-    }
-
-    public function test_exception_if_duplicate_experiment_names()
-    {
-        config([
-            'ab-testing.experiments' => [
-                'test',
-                'test',
-            ],
-        ]);
-
-        $this->expectException(InvalidConfiguration::class);
-
-        AbTestingFacade::pageView();
-    }
-
-    public function test_exception_if_duplicate_goal_names()
-    {
-        config([
-            'ab-testing.goals' => [
-                'test',
-                'test',
-            ],
-        ]);
-
-        $this->expectException(InvalidConfiguration::class);
-
-        AbTestingFacade::pageView();
     }
 
     public function test_exception_if_no_experiments_set()

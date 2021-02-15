@@ -16,6 +16,8 @@ class CreateGoalsTable extends Migration
         Schema::create('ab_goals', function (Blueprint $table) {
             $table->increments('id');
             $table->string('name');
+            $table->string('autocompletegoal_route_regexp_pattern');
+            $table->string('goal_once_a_session');
             $table->integer('hit');
             $table->integer('experiment_id');
             $table->timestamps();

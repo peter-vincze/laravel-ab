@@ -1,10 +1,10 @@
 <?php
 
-namespace Ben182\AbTesting\Commands;
+namespace PeterVincze\AbTesting\Commands;
 
 use Illuminate\Console\Command;
-use Ben182\AbTesting\Models\Goal;
-use Ben182\AbTesting\Models\Experiment;
+use PeterVincze\AbTesting\Models\Goal;
+use PeterVincze\AbTesting\Models\Experiment;
 
 class ResetCommand extends Command
 {
@@ -39,9 +39,9 @@ class ResetCommand extends Command
      */
     public function handle()
     {
-        Goal::truncate();
-        Experiment::truncate();
+        Goal::whereRaw('1 = 1')->delete();
+        Experiment::whereRaw('1 = 1')->delete();
 
-        $this->info('Successfully deleted all experiment visitors and goal completions.');
+        $this->info('Successfully deleted all experiment visitors and goal completions');
     }
 }

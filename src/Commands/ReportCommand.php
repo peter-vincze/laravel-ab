@@ -1,9 +1,9 @@
 <?php
 
-namespace Ben182\AbTesting\Commands;
+namespace PeterVincze\AbTesting\Commands;
 
 use Illuminate\Console\Command;
-use Ben182\AbTesting\Models\Experiment;
+use PeterVincze\AbTesting\Models\Experiment;
 
 class ReportCommand extends Command
 {
@@ -52,8 +52,8 @@ class ReportCommand extends Command
         ];
 
         return array_merge($header, array_map(function ($item) {
-            return 'Goal '.$item;
-        }, config('ab-testing.goals')));
+            return 'Goal '. $item;
+        }, array_keys(config('ab-testing.goals'))));
     }
 
     public function prepareBody()

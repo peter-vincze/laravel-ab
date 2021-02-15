@@ -1,10 +1,10 @@
 <?php
 
-namespace Ben182\AbTesting\Models;
+namespace PeterVincze\AbTesting\Models;
 
-use Ben182\AbTesting\AbTestingFacade;
+use PeterVincze\AbTesting\AbTestingFacade;
 use Illuminate\Database\Eloquent\Model;
-use Ben182\AbTesting\Events\GoalCompleted;
+use PeterVincze\AbTesting\Events\GoalCompleted;
 
 class Goal extends Model
 {
@@ -13,11 +13,11 @@ class Goal extends Model
     protected $fillable = [
         'name',
         'hit',
+        'autocompletegoal_route_regexp_pattern',
+        'goal_once_a_session'
     ];
 
-    protected $casts = [
-        'hit' => 'integer',
-    ];
+    protected $casts = ['hit' => 'integer'];
 
     public function experiment()
     {

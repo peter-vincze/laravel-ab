@@ -1,12 +1,12 @@
 <?php
 
-namespace Ben182\AbTesting;
-
-use Ben182\AbTesting\Models\Goal;
+namespace PeterVincze\AbTesting;
+use PeterVincze\AbTesting\Models\Goal;
 use Illuminate\Support\Collection;
-use Ben182\AbTesting\Models\Experiment;
+use Illuminate\Http\Request;
+use PeterVincze\AbTesting\Models\Experiment;
 use Jaybizzle\CrawlerDetect\CrawlerDetect;
-use Ben182\AbTesting\Exceptions\InvalidConfiguration;
+use PeterVincze\AbTesting\Exceptions\InvalidConfiguration;
 
 class AbTesting
 {
@@ -18,8 +18,10 @@ class AbTesting
     public function __construct()
     {
         $this->experiments = new Collection;
+        if (php_sapi_name() !== 'cli' && session_status() !== PHP_SESSION_ACTIVE) {
+            session_start();
+        }
     }
-
     /**
      * Validates the config items and puts them into models.
      *
@@ -29,52 +31,59 @@ class AbTesting
     {
         $configExperiments = config('ab-testing.experiments');
         $configGoals = config('ab-testing.goals');
-
-        if (! count($configExperiments)) {
+        if (empty($configExperiments)) {
             throw InvalidConfiguration::noExperiment();
         }
 
-        if (count($configExperiments) !== count(array_unique($configExperiments))) {
-            throw InvalidConfiguration::experiment();
+        if (empty($configGoals)) {
+            throw InvalidConfiguration::noGoal();
         }
 
-        if (count($configGoals) !== count(array_unique($configGoals))) {
-            throw InvalidConfiguration::goal();
-        }
-
-        foreach ($configExperiments as $configExperiment) {
+        foreach ($configExperiments as $configExperimentKey => $configExperiment) {
+            if (!isset($configExperiment['git_repo'])) {
+               throw InvalidConfiguration::experiment();
+            }
+            if (!isset($configExperiment['git_checkout'])) {
+               throw InvalidConfiguration::experiment();
+            }
             $this->experiments[] = $experiment = Experiment::firstOrCreate([
-                'name' => $configExperiment,
-            ], [
-                'visitors' => 0,
-            ]);
+            'name' => $configExperimentKey], 
+            ['git_checkout' => $configExperiment['git_checkout'],
+            'git_repo' => $configExperiment['git_repo'],
+            'visitors' => 0,
+            'deploy_script' => $configExperiment['deploy_script']]);
+            foreach ($configGoals as $configGoalKey => $configGoal) {
+                if (!isset($configGoal['autocompletegoal_route_regexp_pattern'])) {
+                   throw InvalidConfiguration::goal();
+                }
+                if (!isset($configGoal['goal_once_a_session'])) {
+                   throw InvalidConfiguration::goal();
+                }
 
-            foreach ($configGoals as $configGoal) {
-                $experiment->goals()->firstOrCreate([
-                    'name' => $configGoal,
-                ], [
-                    'hit' => 0,
-                ]);
+                $this->goals[] = $experiment->goals()->firstOrCreate([
+                'name' => $configGoalKey], 
+                ['autocompletegoal_route_regexp_pattern' => $configGoal['autocompletegoal_route_regexp_pattern'],
+                'goal_once_a_session' => $configGoal['goal_once_a_session'],
+                'hit' => 0]);
             }
         }
-
-        session([
-            self::SESSION_KEY_GOALS => new Collection,
-        ]);
+        $collection = new Collection;
+        $_SESSION[self::SESSION_KEY_GOALS] = $collection;
     }
 
     /**
      * Triggers a new visitor. Picks a new experiment and saves it to the session.
      *
-     * @return \Ben182\AbTesting\Models\Experiment|void
+     * @return \PeterVincze\AbTesting\Models\Experiment|void
      */
     public function pageView()
     {
-        if (session(self::SESSION_KEY_EXPERIMENT)) {
-            return;
+        $experiment = $this->getExperiment();
+        if (!empty($experiment)) {
+            return $experiment;
         }
-
         $this->start();
+
         $this->setNextExperiment();
 
         return $this->getExperiment();
@@ -89,16 +98,13 @@ class AbTesting
     {
         $next = $this->getNextExperiment();
         $next->visit();
-
-        session([
-            self::SESSION_KEY_EXPERIMENT => $next,
-        ]);
+        $_SESSION[self::SESSION_KEY_EXPERIMENT] = $next;
     }
 
     /**
      * Calculates a new experiment.
      *
-     * @return \Ben182\AbTesting\Models\Experiment|null
+     * @return \PeterVincze\AbTesting\Models\Experiment|null
      */
     protected function getNextExperiment()
     {
@@ -126,39 +132,64 @@ class AbTesting
      *
      * @param string $goal The goals name
      *
-     * @return \Ben182\AbTesting\Models\Goal|false
+     * @return \PeterVincze\AbTesting\Models\Goal|false
      */
     public function completeGoal(string $goal)
     {
-        if (! $this->getExperiment()) {
+        $experiment = $this->getExperiment();
+        if (!$experiment) {
             $this->pageView();
+            $experiment = $this->getExperiment();
         }
 
-        $goal = $this->getExperiment()->goals->where('name', $goal)->first();
-
-        if (! $goal) {
+        $goal = $experiment->goals->where('name', $goal)->first();
+        if (!$goal || 
+            ((bool)$goal->goal_once_a_session && $_SESSION[self::SESSION_KEY_GOALS]->contains($goal->id))) {
             return false;
         }
-
-        if (session(self::SESSION_KEY_GOALS)->contains($goal->id)) {
-            return false;
-        }
-
-        session(self::SESSION_KEY_GOALS)->push($goal->id);
-
+        $_SESSION[self::SESSION_KEY_GOALS]->push($goal->id);
         $goal->complete();
 
         return $goal;
     }
 
+     /**
+     * Auto Completes a goal by checking route regexp hit property of the model and setting its ID in the session.
+     *
+     * @param Request $route The goals name
+     *
+     * @return \PeterVincze\AbTesting\Models\Goal|false
+     */
+     public function autoCompleteGoal(Request $request)
+     {
+        $experiment = $this->getExperiment();
+        if (empty($experiment)) {
+            return;
+        }
+        $goals = $experiment->goals;
+        foreach($goals as $goal) {
+            $findGoal = Goal::find($goal->id);
+            if (!empty($findGoal['autocompletegoal_route_regexp_pattern'])) {
+                $matches = [];
+                preg_match_all("/" . ($findGoal['autocompletegoal_route_regexp_pattern']) . "/",$request->getRequestUri(),$matches);
+                if (!empty($matches[0])) {
+                    $this->completeGoal($findGoal['name']);
+                }
+            }
+        };
+    }
+
     /**
      * Returns the currently active experiment.
      *
-     * @return \Ben182\AbTesting\Models\Experiment|null
+     * @return \PeterVincze\AbTesting\Models\Experiment|null
      */
     public function getExperiment()
     {
-        return session(self::SESSION_KEY_EXPERIMENT);
+        if (!empty($_SESSION[self::SESSION_KEY_EXPERIMENT])) {
+            $_SESSION[self::SESSION_KEY_EXPERIMENT] = Experiment::find($_SESSION[self::SESSION_KEY_EXPERIMENT]->id);
+        }
+        return $_SESSION[self::SESSION_KEY_EXPERIMENT] ?? null;
     }
 
     /**
@@ -168,13 +199,14 @@ class AbTesting
      */
     public function getCompletedGoals()
     {
-        if (! session(self::SESSION_KEY_GOALS)) {
+        if (empty($_SESSION[self::SESSION_KEY_GOALS])) {
             return false;
         }
 
-        return session(self::SESSION_KEY_GOALS)->map(function ($goalId) {
+        return $_SESSION[self::SESSION_KEY_GOALS]->map(function ($goalId) {
             return Goal::find($goalId);
         });
+
     }
 
     /**
@@ -185,6 +217,6 @@ class AbTesting
     public function isCrawler()
     {
         return config('ab-testing.ignore_crawlers')
-            && (new CrawlerDetect)->isCrawler();
+        && (new CrawlerDetect)->isCrawler();
     }
 }

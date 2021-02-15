@@ -1,12 +1,12 @@
 <?php
 
-namespace Ben182\AbTesting\Tests;
+namespace PeterVincze\AbTesting\Tests;
 
-use Ben182\AbTesting\AbTesting;
-use Ben182\AbTesting\AbTestingFacade;
+use PeterVincze\AbTesting\AbTesting;
+use PeterVincze\AbTesting\AbTestingFacade;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Facades\Event;
-use Ben182\AbTesting\Events\ExperimentNewVisitor;
+use PeterVincze\AbTesting\Events\ExperimentNewVisitor;
 
 class PageViewTest extends TestCase
 {
@@ -14,9 +14,9 @@ class PageViewTest extends TestCase
     {
         AbTestingFacade::pageView();
 
-        $experiment = session(AbTesting::SESSION_KEY_EXPERIMENT);
+        $experiment = $_SESSION[AbTesting::SESSION_KEY_EXPERIMENT];
+        $this->assertEquals(array_keys($this->experiments)[0], $experiment->name);
 
-        $this->assertEquals($this->experiments[0], $experiment->name);
         $this->assertEquals(1, $experiment->visitors);
 
         Event::assertDispatched(ExperimentNewVisitor::class, function ($e) use ($experiment) {
@@ -28,29 +28,30 @@ class PageViewTest extends TestCase
     {
         $this->test_that_pageview_works();
 
-        session()->flush();
+        $_SESSION = [];
 
-        $this->assertNull(session(AbTesting::SESSION_KEY_EXPERIMENT));
+        $this->assertNull($_SESSION[AbTesting::SESSION_KEY_EXPERIMENT] ?? null);
 
         AbTestingFacade::pageView();
 
-        $experiment = session(AbTesting::SESSION_KEY_EXPERIMENT);
+        $experiment = $_SESSION[AbTesting::SESSION_KEY_EXPERIMENT];
 
-        $this->assertEquals($this->experiments[1], $experiment->name);
+        $this->assertEquals(array_keys($this->experiments)[1], $experiment->name);
         $this->assertEquals(1, $experiment->visitors);
     }
 
     public function test_that_crawlers_does_not_trigger_pageviews()
     {
-        $this->actingAsCrawler();
+        $this->startActingAsCrawler();
 
         AbTestingFacade::pageView();
 
-        $experiment = session(AbTesting::SESSION_KEY_EXPERIMENT);
+        $experiment = $_SESSION[AbTesting::SESSION_KEY_EXPERIMENT];
 
         $this->assertEquals(0, $experiment->visitors);
 
         Event::assertNotDispatched(ExperimentNewVisitor::class);
+        $this->stopActingAsCrawler();
     }
 
     public function test_is_experiment()
@@ -65,29 +66,33 @@ class PageViewTest extends TestCase
 
     public function test_that_two_pageviews_do_not_count_as_two_visitors()
     {
+
         AbTestingFacade::pageView();
         AbTestingFacade::pageView();
 
-        $experiment = session(AbTesting::SESSION_KEY_EXPERIMENT);
+        $experiment = $_SESSION[AbTesting::SESSION_KEY_EXPERIMENT];
 
         $this->assertEquals(1, $experiment->visitors);
     }
 
     public function test_that_isExperiment_triggers_pageview()
     {
+
         AbTestingFacade::isExperiment('firstExperiment');
 
-        $experiment = session(AbTesting::SESSION_KEY_EXPERIMENT);
+        $experiment = $_SESSION[AbTesting::SESSION_KEY_EXPERIMENT];
 
-        $this->assertEquals($this->experiments[0], $experiment->name);
+        $this->assertEquals(array_keys($this->experiments)[0], $experiment->name);
         $this->assertEquals(1, $experiment->visitors);
+
     }
 
     public function test_request_macro()
     {
+
         $this->newVisitor();
 
-        $experiment = session(AbTesting::SESSION_KEY_EXPERIMENT);
+        $experiment = $_SESSION[AbTesting::SESSION_KEY_EXPERIMENT];
 
         $this->assertEquals($experiment, request()->abExperiment());
     }
